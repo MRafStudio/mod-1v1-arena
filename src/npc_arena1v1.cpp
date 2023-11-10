@@ -92,7 +92,22 @@ public:
     void OnLogin(Player* pPlayer) override
     {
         if (sConfigMgr->GetOption<bool>("Arena1v1.Announcer", true))
-            ChatHandler(pPlayer->GetSession()).SendSysMessage("This server is running the |cff4CFF00Arena 1v1 |rmodule.");
+        {
+            WorldSession* session = pPlayer->GetSession();
+            std::string message = "";
+            switch (session->GetSessionDbLocaleIndex())
+            {
+            case LOCALE_ruRU:
+            {
+                message = "На сервере запущен модуль";
+                break;
+            }
+            default:
+                message = "This server is running the";
+                break;
+            }
+            ChatHandler(pPlayer->GetSession()).SendSysMessage(message + " |cff4CFF00Arena 1v1 |r");
+        }
     }
 
     void GetCustomGetArenaTeamId(const Player* player, uint8 slot, uint32& id) const override
@@ -139,34 +154,70 @@ public:
         if (!player || !creature)
             return true;
 
+        // Locales ruRU / enGB
+        WorldSession* session = player->GetSession();
+        std::string msgDisabled = "";
+        std::string msg1v1Leave = "";
+        std::string msg1v1UnRated = "";
+        std::string msg1v1Team = "";
+        std::string msg1v1Rated = "";
+        std::string msg1v1Clear = "";
+        std::string msg1v1Statistics = "";
+        std::string msgConfirm = "";
+        switch (session->GetSessionDbLocaleIndex())
+        {
+        case LOCALE_ruRU:
+        {
+            msgDisabled = "1v1 отключено!";
+            msg1v1Leave = "Покинуть очередь арены 1v1";
+            msg1v1UnRated = "Очередь на арену 1v1 (без рейтинга)";
+            msg1v1Team = "Создать новую команду арены 1v1";
+            msg1v1Rated = "Очередь на арену 1v1 (с рейтингом)";
+            msg1v1Clear = "Удалить команду арены";
+            msg1v1Statistics = "Показать мою статистику";
+            msgConfirm = "Вы уверены?";
+            break;
+        }
+        default:
+            msgDisabled = "1v1 disabled!";
+            msg1v1Leave = "Queue leave 1v1 Arena";
+            msg1v1UnRated = "Queue enter 1v1 Arena (UnRated)";
+            msg1v1Team = "Create new 1v1 Arena Team";
+            msg1v1Rated = "Queue enter 1v1 Arena (Rated)";
+            msg1v1Clear = "Arenateam Clear";
+            msg1v1Statistics = "Shows your statistics";
+            msgConfirm = "Are you sure?";
+            break;
+        }
+
         if (sConfigMgr->GetOption<bool>("Arena1v1.Enable", true) == false)
         {
-            ChatHandler(player->GetSession()).SendSysMessage("1v1 disabled!");
+            ChatHandler(player->GetSession()).SendSysMessage(msgDisabled);
             return true;
         }
 
         if (player->InBattlegroundQueueForBattlegroundQueueType(bgQueueTypeId))
         {
-            AddGossipItemFor(player, GOSSIP_ICON_CHAT, "Queue leave 1v1 Arena", GOSSIP_SENDER_MAIN, 3, "Are you sure?", 0, false);
+            AddGossipItemFor(player, GOSSIP_ICON_CHAT, msg1v1Leave, GOSSIP_SENDER_MAIN, 3, msgConfirm, 0, false);
         }
         else
         {
-            AddGossipItemFor(player, GOSSIP_ICON_CHAT, "Queue enter 1v1 Arena (UnRated)", GOSSIP_SENDER_MAIN, 20);
+            AddGossipItemFor(player, GOSSIP_ICON_CHAT, msg1v1UnRated, GOSSIP_SENDER_MAIN, 20);
         }
 
         if (!teamExistForPlayerGuid(player))
         {
-            AddGossipItemFor(player, GOSSIP_ICON_CHAT, "Create new 1v1 Arena Team", GOSSIP_SENDER_MAIN, 1, "Are you sure?", sConfigMgr->GetOption<uint32>("Arena1v1.Costs", 400000), false);
+            AddGossipItemFor(player, GOSSIP_ICON_CHAT, msg1v1Team, GOSSIP_SENDER_MAIN, 1, msgConfirm, sConfigMgr->GetOption<uint32>("Arena1v1.Costs", 400000), false);
         }
         else
         {
             if (!player->InBattlegroundQueueForBattlegroundQueueType(bgQueueTypeId))
             {
-                AddGossipItemFor(player, GOSSIP_ICON_CHAT, "Queue enter 1v1 Arena (Rated)", GOSSIP_SENDER_MAIN, 2);
-                AddGossipItemFor(player, GOSSIP_ICON_CHAT, "Arenateam Clear", GOSSIP_SENDER_MAIN, 5, "Are you sure?", 0, false);
+                AddGossipItemFor(player, GOSSIP_ICON_CHAT, msg1v1Rated, GOSSIP_SENDER_MAIN, 2);
+                AddGossipItemFor(player, GOSSIP_ICON_CHAT, msg1v1Clear, GOSSIP_SENDER_MAIN, 5, msgConfirm, 0, false);
             }
 
-            AddGossipItemFor(player, GOSSIP_ICON_CHAT, "Shows your statistics", GOSSIP_SENDER_MAIN, 4);
+            AddGossipItemFor(player, GOSSIP_ICON_CHAT, msg1v1Statistics, GOSSIP_SENDER_MAIN, 4);
         }
 
         SendGossipMenuFor(player, 68, creature);
@@ -177,6 +228,9 @@ public:
     {
         if (!player || !creature)
             return true;
+
+        // Locales ruRU / enGB
+        WorldSession* session = player->GetSession();
 
         ClearGossipMenuFor(player);
 
@@ -193,7 +247,15 @@ public:
                 }
                 else
                 {
-                    handler.PSendSysMessage("You have to be level %u + to create a 1v1 arena team.", sConfigMgr->GetOption<uint32>("Arena1v1.MinLevel", 70));
+                    switch (session->GetSessionDbLocaleIndex())
+                    {
+                    case LOCALE_ruRU:
+                    {
+                        handler.PSendSysMessage("Чтобы создать команду, вы должны быть выше уровня %u", sConfigMgr->GetOption<uint32>("Arena1v1.MinLevel", 70));
+                    }
+                    default:
+                        handler.PSendSysMessage("You have to be level %u + to create a 1v1 arena team.", sConfigMgr->GetOption<uint32>("Arena1v1.MinLevel", 70));
+                    }
                     return true;
                 }
                 CloseGossipMenuFor(player);
@@ -203,7 +265,15 @@ public:
             case 2: // Join Queue Arena (rated)
             {
                 if (Arena1v1CheckTalents(player) && !JoinQueueArena(player, creature, true))
-                    handler.SendSysMessage("Something went wrong when joining the queue.");
+                    switch (session->GetSessionDbLocaleIndex())
+                    {
+                    case LOCALE_ruRU:
+                    {
+                        handler.SendSysMessage("При постановке в очередь что-то пошло не так.");
+                    }
+                    default:
+                        handler.SendSysMessage("Something went wrong when joining the queue.");
+                    }
 
                 CloseGossipMenuFor(player);
                 return true;
@@ -213,7 +283,15 @@ public:
             case 20: // Join Queue Arena (unrated)
             {
                 if (Arena1v1CheckTalents(player) && !JoinQueueArena(player, creature, false))
-                    handler.SendSysMessage("Something went wrong when joining the queue.");
+                    switch (session->GetSessionDbLocaleIndex())
+                    {
+                    case LOCALE_ruRU:
+                    {
+                        handler.SendSysMessage("При постановке в очередь что-то пошло не так.");
+                    }
+                    default:
+                        handler.SendSysMessage("Something went wrong when joining the queue.");
+                    }
 
                 CloseGossipMenuFor(player);
                 return true;
@@ -241,12 +319,25 @@ public:
                 if (at)
                 {
                     std::stringstream s;
-                    s << "\nRating: " << at->GetStats().Rating;
-                    s << "\nRank: " << at->GetStats().Rank;
-                    s << "\nSeason Games: " << at->GetStats().SeasonGames;
-                    s << "\nSeason Wins: " << at->GetStats().SeasonWins;
-                    s << "\nWeek Games: " << at->GetStats().WeekGames;
-                    s << "\nWeek Wins: " << at->GetStats().WeekWins;
+                    switch (session->GetSessionDbLocaleIndex())
+                    {
+                    case LOCALE_ruRU:
+                    {
+                        s << "\nРейтинг: " << at->GetStats().Rating;
+                        s << "\nРанг: " << at->GetStats().Rank;
+                        s << "\nСезон игр: " << at->GetStats().SeasonGames;
+                        s << "\nПобед за сезон: " << at->GetStats().SeasonWins;
+                        s << "\nИгр за неделю: " << at->GetStats().WeekGames;
+                        s << "\nПобед за неделю: " << at->GetStats().WeekWins;
+                    }
+                    default:
+                        s << "\nRating: " << at->GetStats().Rating;
+                        s << "\nRank: " << at->GetStats().Rank;
+                        s << "\nSeason Games: " << at->GetStats().SeasonGames;
+                        s << "\nSeason Wins: " << at->GetStats().SeasonWins;
+                        s << "\nWeek Games: " << at->GetStats().WeekGames;
+                        s << "\nWeek Wins: " << at->GetStats().WeekWins;
+                    }
 
                     ChatHandler(player->GetSession()).PSendSysMessage(SERVER_MSG_STRING, s.str().c_str());
                 }
@@ -259,7 +350,15 @@ public:
                 WorldPacket Data;
                 Data << playerArenaTeam(player);
                 player->GetSession()->HandleArenaTeamLeaveOpcode(Data);
-                handler.SendSysMessage("Arenateam deleted!");
+                switch (session->GetSessionDbLocaleIndex())
+                {
+                case LOCALE_ruRU:
+                {
+                    handler.SendSysMessage("Команда арены удалена!");
+                }
+                default:
+                    handler.SendSysMessage("Arenateam deleted!");
+                }
                 CloseGossipMenuFor(player);
                 return true;
             }
@@ -359,6 +458,24 @@ private:
         if (slot == 0)
             return false;
 
+        // Locales ruRU / enGB
+        WorldSession* session = player->GetSession();
+        std::string msgAlready = "";
+        std::string msgCreated = "";
+        switch (session->GetSessionDbLocaleIndex())
+        {
+        case LOCALE_ruRU:
+        {
+            msgAlready = "Вы уже состоите в команде арены!";
+            msgCreated = "Команда арены 1v1 успешно создана!";
+            break;
+        }
+        default:
+            msgAlready = "You are already in an arena team!";
+            msgCreated = "1v1 Arenateam successfully created!";
+            break;
+        }
+
         // This disaster is the result of changing the MAX_ARENA_SLOT from 3 to 4.
         uint32 playerHonorPoints = player->GetHonorPoints();
         uint32 playerArenaPoints = player->GetArenaPoints();
@@ -368,7 +485,7 @@ private:
         // Check if player is already in an arena team
         if (player->GetArenaTeamId(slot))
         {
-            player->GetSession()->SendArenaTeamCommandResult(ERR_ARENA_TEAM_CREATE_S, player->GetName(), "You are already in an arena team!", ERR_ALREADY_IN_ARENA_TEAM);
+            player->GetSession()->SendArenaTeamCommandResult(ERR_ARENA_TEAM_CREATE_S, player->GetName(), msgAlready, ERR_ALREADY_IN_ARENA_TEAM);
             return false;
         }
 
@@ -387,7 +504,7 @@ private:
         // Register arena team
         sArenaTeamMgr->AddArenaTeam(arenaTeam);
 
-        ChatHandler(player->GetSession()).SendSysMessage("1v1 Arenateam successfully created!");
+        ChatHandler(player->GetSession()).SendSysMessage(msgCreated);
 
         // This disaster is the result of changing the MAX_ARENA_SLOT from 3 to 4.
         player->SetHonorPoints(playerHonorPoints);
@@ -404,6 +521,24 @@ private:
         if (sConfigMgr->GetOption<bool>("Arena1v1.BlockForbiddenTalents", true) == false)
             return true;
 
+        // Locales ruRU / enGB
+        WorldSession* session = player->GetSession();
+        std::string msgForbiddenTalents = "";
+        std::string msgManyTalentPoints = "";
+        switch (session->GetSessionDbLocaleIndex())
+        {
+        case LOCALE_ruRU:
+        {
+            msgForbiddenTalents = "Вы не можете присоединиться, потому что у вас запрещенные таланты.";
+            msgManyTalentPoints = "Вы не можете присоединиться, потому что у вас слишком много очков талантов. (Хилер / Танк)";
+            break;
+        }
+        default:
+            msgForbiddenTalents = "You can not join because you have forbidden talents.";
+            msgManyTalentPoints = "You can not join because you have too many talent points in a forbidden tree. (Heal / Tank)";
+            break;
+        }
+
         uint32 count = 0;
 
         for (uint32 talentId = 0; talentId < sTalentStore.GetNumRows(); ++talentId)
@@ -415,7 +550,7 @@ private:
 
             if (std::find(forbiddenTalents.begin(), forbiddenTalents.end(), talentInfo->TalentID) != forbiddenTalents.end())
             {
-                ChatHandler(player->GetSession()).SendSysMessage("You can not join because you have forbidden talents.");
+                ChatHandler(player->GetSession()).SendSysMessage(msgForbiddenTalents);
                 return false;
             }
 
@@ -426,7 +561,7 @@ private:
 
         if (count >= 36)
         {
-            ChatHandler(player->GetSession()).SendSysMessage("You can not join because you have too many talent points in a forbidden tree. (Heal / Tank)");
+            ChatHandler(player->GetSession()).SendSysMessage(msgManyTalentPoints);
             return false;
         }
 
