@@ -94,19 +94,17 @@ public:
         if (sConfigMgr->GetOption<bool>("Arena1v1.Announcer", true))
         {
             WorldSession* session = pPlayer->GetSession();
-            std::string message = "";
             switch (session->GetSessionDbLocaleIndex())
             {
             case LOCALE_ruRU:
             {
-                message = "На сервере запущен модуль";
+                ChatHandler(pPlayer->GetSession()).SendSysMessage("На сервере запущен модуль |cff4CFF00Arena 1v1 |r");
                 break;
             }
             default:
-                message = "This server is running the";
+                ChatHandler(pPlayer->GetSession()).SendSysMessage("This server is running the |cff4CFF00Arena 1v1 |rmodule.");
                 break;
             }
-            ChatHandler(pPlayer->GetSession()).SendSysMessage(message + " |cff4CFF00Arena 1v1 |r");
         }
     }
 
