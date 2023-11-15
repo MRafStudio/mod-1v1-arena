@@ -250,9 +250,11 @@ public:
                     case LOCALE_ruRU:
                     {
                         handler.PSendSysMessage("Чтобы создать команду, вы должны быть выше уровня %u", sConfigMgr->GetOption<uint32>("Arena1v1.MinLevel", 70));
+                        break;
                     }
                     default:
                         handler.PSendSysMessage("You have to be level %u + to create a 1v1 arena team.", sConfigMgr->GetOption<uint32>("Arena1v1.MinLevel", 70));
+                        break;
                     }
                     return true;
                 }
@@ -268,9 +270,11 @@ public:
                     case LOCALE_ruRU:
                     {
                         handler.SendSysMessage("При постановке в очередь что-то пошло не так.");
+                        break;
                     }
                     default:
                         handler.SendSysMessage("Something went wrong when joining the queue.");
+                        break;
                     }
 
                 CloseGossipMenuFor(player);
@@ -286,9 +290,11 @@ public:
                     case LOCALE_ruRU:
                     {
                         handler.SendSysMessage("При постановке в очередь что-то пошло не так.");
+                        break;
                     }
                     default:
                         handler.SendSysMessage("Something went wrong when joining the queue.");
+                        break;
                     }
 
                 CloseGossipMenuFor(player);
@@ -327,6 +333,7 @@ public:
                         s << "\nПобед за сезон: " << at->GetStats().SeasonWins;
                         s << "\nИгр за неделю: " << at->GetStats().WeekGames;
                         s << "\nПобед за неделю: " << at->GetStats().WeekWins;
+                        break;
                     }
                     default:
                         s << "\nRating: " << at->GetStats().Rating;
@@ -335,6 +342,7 @@ public:
                         s << "\nSeason Wins: " << at->GetStats().SeasonWins;
                         s << "\nWeek Games: " << at->GetStats().WeekGames;
                         s << "\nWeek Wins: " << at->GetStats().WeekWins;
+                        break;
                     }
 
                     ChatHandler(player->GetSession()).PSendSysMessage(SERVER_MSG_STRING, s.str().c_str());
@@ -353,9 +361,11 @@ public:
                 case LOCALE_ruRU:
                 {
                     handler.SendSysMessage("Команда арены удалена!");
+                    break;
                 }
                 default:
                     handler.SendSysMessage("Arenateam deleted!");
+                    break;
                 }
                 CloseGossipMenuFor(player);
                 return true;
